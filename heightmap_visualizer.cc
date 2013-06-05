@@ -1,3 +1,4 @@
+#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
@@ -111,15 +112,7 @@ void display() {
     glColor3f(0.5f, 0.5f, 0.5f);
     for(int j = 0; j < y - 1; ++j) {
         glBegin(GL_TRIANGLE_STRIP);
-        for(int i = 0; i < x; ++i) {
-                //glColor3ub(map[i][j], map[i][j], map[i][j]);
-                
-                /*glNormal3f( normals[i][j].x(), normals[i][j].y(), normals[i][j].z() );
-                glVertex3f( float(i)         , float(j)         , map[i][j]);
-                
-                glNormal3f( normals[i+1][j].x(), normals[i+1][j].y(), normals[i+1][j].z() );
-                glVertex3f( float(i+1)         , float(j)           , map[i+1][j]);*/
-                
+        for(int i = 0; i < x; ++i) {                
                 glNormal3f( normals[j][i].x(), normals[j][i].y(), normals[j][i].z() );
                 glVertex3f( float(i)         , float(j)         , map[j][i]);
                 
@@ -203,6 +196,13 @@ int main(int argc, char** argv) {
     glutInitWindowSize(WIDTH, HEIGHT);
     glutCreateWindow("Heightmap Visualizer");
     glViewport(0,0, WIDTH, HEIGHT);
+    
+    // GLEW
+    GLenum err = glewInit();
+    if (GLEW_OK != err) {
+        fprintf(stderr, "GLEW Error: %s\n", glewGetErrorString(err));
+        return false;
+    }
     
     // Lighting
     GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
