@@ -4,6 +4,7 @@ int mt[623];
 int index = 0;
 
 void generate_numbers();
+
 // Initialize the generator from a seed
 void initialize_generator(int seed) {
     int i = 0;

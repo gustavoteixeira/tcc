@@ -2,20 +2,37 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include "mersenne_twister.h"
 
 int seed = 0;
 double PI = 3.141592653589793;
 double persistence = 0.65;
 double inverse_height = 0;
+double randomv[510][510];
 
-double random(int x, int y){
+double random(int x, int y);/*{
     int r;
     double s;
     srand(y * 500 + x + seed);
     r = rand();
-    s = (double)(r & RAND_MAX)/(double)RAND_MAX;
+    s = (double)(r)/(double)RAND_MAX;
 
     return s;
+}*/
+
+double generateRandomValues() {
+    seed = time(NULL);
+    for(int y = 0; y < 510; ++y) {
+        for(int x = 0; x < 510; ++x) {
+            srand(y * 510 + x + seed);
+            int r = rand();
+            randomv[x][y] = (double)(r)/(double)(RAND_MAX);
+        }
+    }
+}
+
+double random(int x, int y) {
+    return randomv[x%500+10][y%500+10];
 }
 
 double Noise(int x, int y) {
@@ -56,11 +73,10 @@ double smoothedNoise(double x, double y) {
 double getMapValue(int x, int y) {
     //for each pixel, get the value
     inverse_height = 1.0f/ 500.0f;
-    int octaves = 16;
+    int octaves = 7;
     double total = 0.0f;
     double inverse_width  = 1.0f/ 500.0f;
     double amplitude = persistence;
-    //printf("%d, %f, %f\n", x, inverse_width,x * inverse_width);
                     
     for (int i = 0; i < octaves; ++i) {
         total += smoothedNoise((double)x * inverse_width, (double)y * inverse_height) * amplitude;
@@ -71,12 +87,22 @@ double getMapValue(int x, int y) {
 }
 
 int main(int argc, char* argv[]) {
-    FILE* ppm_output = fopen("noise.ppm" , "w");
+    FILE* ppm_output = fopen("value_noise.ppm" , "wb");
+    FILE* heightmap_output = fopen("perlin_noise.txt" , "w");
+    double** heightmap;
+    double min = 0, max = 0, range;
+    
+    heightmap = malloc(500 * sizeof(double*));
+    for(int i = 0; i < 500; ++i)
+        heightmap[i] = malloc(500 * sizeof(double));
+    fputs ("500 500\n", heightmap_output);
     fputs ("P6\n500 500\n255\n", ppm_output);
+    
     srand(time(NULL));
     printf("%d\n", rand());
     for(int i = 0; i < 500; ++i) {
         for(int j = 0; j < 500; ++j) {
+            //heightmap[i][j]
             double val = getMapValue(i+1, j+1);
             unsigned char daora = (unsigned char) (floor(val*255));
             fputc(daora, ppm_output);
@@ -84,5 +110,7 @@ int main(int argc, char* argv[]) {
             fputc(daora, ppm_output);
         }
     }
+    
     fclose(ppm_output);
+    fclose(heightmap_output);
 }

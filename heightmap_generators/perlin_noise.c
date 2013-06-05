@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include "mersenne_twister.h"
 
 int seed = 0;
 double gradients[1000][1000][2];
@@ -127,18 +128,52 @@ double getMapValue(int x, int y) {
 
 int main(int argc, char* argv[]) {
     FILE* ppm_output = fopen("perlin_noise.ppm" , "wb");
+    FILE* heightmap_output = fopen("perlin_noise.txt" , "w");
+    double** heightmap;
+    double min = 0, max = 0, range;
+    unsigned char daora;
+    
+    heightmap = malloc(1000 * sizeof(double*));
+    for(int i = 0; i < 1000; ++i)
+        heightmap[i] = malloc(1000 * sizeof(double));
+    
     seed = time(NULL);
     printf("%d\n", rand());
     generateGradients();
     fputs ("P6\n1000 1000\n255\n", ppm_output);
+    fputs ("1000 1000\n", heightmap_output);
     for(int i = 0; i < 1000; ++i) {
         for(int j = 0; j < 1000; ++j) {
-            double val = getMapValue(i+1, j+1);
-            unsigned char daora = (unsigned char) (floor(val*255));
-            fputc(daora, ppm_output);
-            fputc(daora, ppm_output);
-            fputc(daora, ppm_output);
+            heightmap[i][j] = getMapValue(i+1, j+1);
+            if(heightmap[i][j] > max)
+                max = heightmap[i][j];
+            else if (min == 0 || heightmap[i][j] < min)
+                min = heightmap[i][j];
         }
     }
+    
+    range = max - min;
+    for(int i = 0; i < 1000; ++i) {
+        for(int j = 0; j < 1000; ++j) {
+            heightmap[i][j] = (heightmap[i][j] - min) / range;
+            daora = (unsigned char) (floor(heightmap[i][j]*255));
+            fprintf(heightmap_output, "%f ", heightmap[i][j]*255 );
+            fputc(daora, ppm_output);
+            fputc(daora, ppm_output);
+            fputc(daora, ppm_output);
+            /*if(heightmap[i][j] * 255 < 120) {
+                fputc((unsigned char) 0, ppm_output);
+                unsigned char daora = (unsigned char) (floor(heightmap[i][j]*255) + 134);
+                fputc(daora, ppm_output);
+            } else {
+                unsigned char daora = (unsigned char) (floor(heightmap[i][j]*255));
+                fputc(daora, ppm_output);
+                fputc((unsigned char) 0, ppm_output);
+            }*/
+        }
+        fprintf(heightmap_output, "\n");
+    }
+    
+    fclose(heightmap_output);
     fclose(ppm_output);
 }
