@@ -170,30 +170,19 @@ void display() {
     
     glColor3f(0.5f, 0.5f, 0.5f);
     
-    /*
-    for(int j = 0; j < y - 1; ++j) {
-        glBegin(GL_TRIANGLE_STRIP);
-        for(int i = 0; i < x; ++i) {                
-                //glNormal3f( normals[j][i].x(), normals[j][i].y(), normals[j][i].z() );
-                glVertex3f( float(i)         , float(j)         , map[j][i]);
-                
-                //glNormal3f( normals[j+1][i].x(), normals[j+1][i].y(), normals[j+1][i].z() );
-                glVertex3f( float(i)           , float(j+1)         , map[j+1][i]);
-        }
-        glEnd();
-    }*/
-    
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
-    {
-        opengl::VertexBuffer::Bind bind(*buffer);
-        glVertexPointer(3, GL_FLOAT, 0, buffer->getPointer(0));
+    for(int j = 0; j < y - 1; ++j) {
+        {
+            opengl::VertexBuffer::Bind bind(*buffer);
+            glVertexPointer(3, GL_FLOAT, 0, buffer->getPointer(j * (x * 2 * 3 * sizeof(float))));
+        }
+        {
+            opengl::VertexBuffer::Bind bind(*normalbuffer);
+            glNormalPointer(GL_FLOAT, 0, normalbuffer->getPointer(j * (x * 2 * 3 * sizeof(float))));
+        }
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, x * 2);
     }
-    {
-        opengl::VertexBuffer::Bind bind(*normalbuffer);
-        glNormalPointer(GL_FLOAT, 0, normalbuffer->getPointer(0));
-    }
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, (y - 1) * x * 2);
     
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
