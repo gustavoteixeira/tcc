@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "opengl/vertexbuffer.h"
+
 #define PI 3.1415
 
 class Vector3D {
@@ -45,6 +47,9 @@ double angle = PI/2;
 
 std::vector<std::vector<float>> map;
 std::vector<std::vector<Vector3D>> normals;
+
+opengl::VertexBuffer* buffer;
+opengl::VertexBuffer* normalbuffer;
 
 Vector3D cross(Vector3D v1, Vector3D v2) {
     Vector3D ret;
@@ -97,6 +102,60 @@ void calculateNormals() {
     return;
 }
 
+void fillbuffers() {
+    static const GLfloat buffer_data[] = { 
+        0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f
+    };
+    
+    // VERTICES
+    {
+        opengl::VertexBuffer::Bind bind(*buffer);
+        opengl::VertexBuffer::Mapper mapper(*buffer);
+
+        GLfloat *indices = static_cast<GLfloat*>(mapper.get());
+        if (indices) {
+            int ind = 0;
+            for(int j = 0; j < y - 1; ++j) {
+                for(int i = 0; i < x; ++i) {
+                    indices[ind + 0] = float(i);
+                    indices[ind + 1] = float(j);
+                    indices[ind + 2] = map[j][i];
+                    ind += 3;
+                    
+                    indices[ind + 0] = float(i);
+                    indices[ind + 1] = float(j+1);
+                    indices[ind + 2] = map[j+1][i];
+                    ind += 3;
+                }
+            }
+        }
+    }
+    
+    // NORMALS
+    {
+        opengl::VertexBuffer::Bind bind(*normalbuffer);
+        opengl::VertexBuffer::Mapper mapper(*normalbuffer);
+
+        GLfloat *indices = static_cast<GLfloat*>(mapper.get());
+        if (indices) {
+            int ind = 0;
+            for(int j = 0; j < y - 1; ++j) {
+                for(int i = 0; i < x; ++i) {
+                    indices[ind + 0] = normals[j][i].x();
+                    indices[ind + 1] = normals[j][i].y();
+                    indices[ind + 2] = normals[j][i].z();
+                    ind += 3;
+                    
+                    indices[ind + 0] = normals[j+1][i].x();
+                    indices[ind + 1] = normals[j+1][i].y();
+                    indices[ind + 2] = normals[j+1][i].z();
+                    ind += 3;
+                }
+            }
+        }
+    }
+}
+
 void display() {
     // limpa a tela
     glLoadIdentity();
@@ -110,17 +169,34 @@ void display() {
               0, 0, 1);
     
     glColor3f(0.5f, 0.5f, 0.5f);
+    
+    /*
     for(int j = 0; j < y - 1; ++j) {
         glBegin(GL_TRIANGLE_STRIP);
         for(int i = 0; i < x; ++i) {                
-                glNormal3f( normals[j][i].x(), normals[j][i].y(), normals[j][i].z() );
+                //glNormal3f( normals[j][i].x(), normals[j][i].y(), normals[j][i].z() );
                 glVertex3f( float(i)         , float(j)         , map[j][i]);
                 
-                glNormal3f( normals[j+1][i].x(), normals[j+1][i].y(), normals[j+1][i].z() );
+                //glNormal3f( normals[j+1][i].x(), normals[j+1][i].y(), normals[j+1][i].z() );
                 glVertex3f( float(i)           , float(j+1)         , map[j+1][i]);
         }
         glEnd();
+    }*/
+    
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    {
+        opengl::VertexBuffer::Bind bind(*buffer);
+        glVertexPointer(3, GL_FLOAT, 0, buffer->getPointer(0));
     }
+    {
+        opengl::VertexBuffer::Bind bind(*normalbuffer);
+        glNormalPointer(GL_FLOAT, 0, normalbuffer->getPointer(0));
+    }
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, (y - 1) * x * 2);
+    
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
 
     glutSwapBuffers();
 }
@@ -217,6 +293,11 @@ int main(int argc, char** argv) {
     glEnable(GL_LIGHT0);
     //glCullFace(GL_FRONT);
     //glEnable(GL_CULL_FACE);
+    
+    buffer = opengl::VertexBuffer::Create(((y - 1) * x * 2) * 3 * sizeof(float), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    normalbuffer = opengl::VertexBuffer::Create(((y - 1) * x * 2) * 3 * sizeof(float), GL_ARRAY_BUFFER, GL_STATIC_DRAW);
+    
+    fillbuffers();
     
     glMatrixMode(GL_PROJECTION);
     gluPerspective(45, 1, 1, 1100);
