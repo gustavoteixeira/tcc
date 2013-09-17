@@ -9,10 +9,11 @@ add_definitions(-DGLEW_STATIC)
 add_subdirectory(glew)
 include_directories("glew/include")
 
+include_directories(${PROJECT_SOURCE_DIR})
 
-add_executable(heightmap_visualizer heightmap_visualizer.cc opengl/Exception.cc opengl/vertexbuffer.cc)
+add_executable(heightmap_visualizer heightmap_visualizer.cc mapprocessor.cc opengl/Exception.cc opengl/vertexbuffer.cc)
 
-target_link_libraries(heightmap_visualizer 
+target_link_libraries(heightmap_visualizer
                                            ${GLEW_LIBRARY}
                                            ${OPENGL_LIBRARIES}
                                            "C:/MinGW/lib/libfreeglut.a")
