@@ -1,5 +1,8 @@
 #include <stdlib.h>
 
+// Taken from wikipedia example
+// http://en.wikipedia.org/wiki/Mersenne_twister
+
 int mt[623];
 int index = 0;
 
